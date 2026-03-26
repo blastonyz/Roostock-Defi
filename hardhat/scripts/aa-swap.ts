@@ -156,6 +156,21 @@ type UserOpUnpacked = {
   signature: string;
 };
 
+const normalizeHex = (value?: string | null) => value ?? "0x0";
+
+function buildPaymasterAndData(userOp: UserOpUnpacked): `0x${string}` {
+  if (!userOp.paymaster) return "0x";
+  const paymaster = userOp.paymaster.toLowerCase().replace(/^0x/, "");
+  const verificationGas = BigInt(normalizeHex(userOp.paymasterVerificationGasLimit))
+    .toString(16)
+    .padStart(32, "0");
+  const postOpGas = BigInt(normalizeHex(userOp.paymasterPostOpGasLimit))
+    .toString(16)
+    .padStart(32, "0");
+  const paymasterData = (userOp.paymasterData ?? "0x").replace(/^0x/, "");
+  return (`0x${paymaster}${verificationGas}${postOpGas}${paymasterData}`) as `0x${string}`;
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────────────
 
 function requireAddress(value: string | undefined, label: string): `0x${string}` {
@@ -181,7 +196,7 @@ function computeUserOpHash(userOp: {
   preVerificationGas: string;
   gasFees: string;
   paymasterAndData: string;
-}, entryPoint: string, chainId: string): string {
+}, entryPoint: string, chainId: string): `0x${string}` {
   const innerHash = keccak256(
     encodeAbiParameters(
       [
@@ -261,6 +276,9 @@ async function main() {
 
   const ENTRY_POINT = requireAddress(process.env.ENTRY_POINT_ADDRESS, "ENTRY_POINT_ADDRESS");
   const FACTORY = requireAddress(process.env.AA_FACTORY_ADDRESS, "AA_FACTORY_ADDRESS");
+  const PAYMASTER = process.env.AA_PAYMASTER_ADDRESS
+    ? requireAddress(process.env.AA_PAYMASTER_ADDRESS, "AA_PAYMASTER_ADDRESS")
+    : undefined;
   const SWAPPER = requireAddress(process.env.SOVRYN_SWAPPER_ADDRESS, "SOVRYN_SWAPPER_ADDRESS");
   const WRBTC = requireAddress(process.env.SOVRYN_WRBTC_ADDRESS, "SOVRYN_WRBTC_ADDRESS");
   const DOC = requireAddress(process.env.SOVRYN_DOC_ADDRESS, "SOVRYN_DOC_ADDRESS");
@@ -281,6 +299,7 @@ async function main() {
   console.log("\n=== AA + Sovryn Swap via Bundler ===\n");
   console.log("📍 EOA:", owner);
   console.log("📍 EntryPoint:", ENTRY_POINT);
+  console.log("📍 Paymaster:", PAYMASTER ?? "(none)");
   console.log("📍 Bundler:", bundlerUrl.split("?")[0]);
 
   // Check bundler support
@@ -315,6 +334,10 @@ async function main() {
   } else {
     console.log("✅ Smart account already deployed");
   }
+
+  const accountCodeAfterDeploy = await publicClient.getBytecode({ address: smartAccount });
+  const accountExists = !!accountCodeAfterDeploy && accountCodeAfterDeploy !== "0x";
+  console.log("📍 Account exists:", accountExists);
 
   // Fund native token
   const smartAccountNative = await publicClient.getBalance({ address: smartAccount });
@@ -390,13 +413,14 @@ async function main() {
     args: [[WRBTC, SWAPPER], [0n, 0n], [approveCall, swapCall]],
   });
 
-  // Get nonce
+  // Get nonce (fresh read right before building UserOp)
   const nonce = await publicClient.readContract({
     address: ENTRY_POINT,
     abi: entryPointAbi,
     functionName: "getNonce",
     args: [smartAccount, 0n],
   });
+  console.log(`📍 Nonce (EntryPoint): ${nonce.toString()} / 0x${nonce.toString(16)}`);
 
   // ─── Step 1: Build initial UserOp (unpacked format) ─────────────────
 
@@ -413,6 +437,13 @@ async function main() {
     signature: "0x" + "00".repeat(65), // 65 bytes dummy sig
   };
 
+  if (PAYMASTER) {
+    userOpBase.paymaster = PAYMASTER;
+    userOpBase.paymasterData = "0x";
+    userOpBase.paymasterVerificationGasLimit = "0x0";
+    userOpBase.paymasterPostOpGasLimit = "0x0";
+  }
+
   // Build packed format for hash calculation
   const toPackedUserOp = (userOp: UserOpUnpacked) => ({
     sender: userOp.sender,
@@ -420,9 +451,9 @@ async function main() {
     initCode: userOp.initCode || "0x",
     callData: userOp.callData,
     accountGasLimits: packGas(userOp.verificationGasLimit || "0x0", userOp.callGasLimit || "0x0"),
-    preVerificationGas: userOp.preVerificationGas,
+    preVerificationGas: userOp.preVerificationGas || "0x0",
     gasFees: packGas(userOp.maxPriorityFeePerGas || "0x0", userOp.maxFeePerGas || "0x0"),
-    paymasterAndData: "0x",
+    paymasterAndData: buildPaymasterAndData(userOp),
     signature: userOp.signature,
   });
 
@@ -432,18 +463,38 @@ async function main() {
 
   // Sign initial hash
   const initialSig = await eoa.signMessage({
-    message: { raw: initialHash },
+    message: { raw: initialHash as `0x${string}` },
   });
 
   userOpBase.signature = initialSig;
 
   // ─── Step 2: Estimate gas via bundler ──────────────────────────────
 
+  // Re-read nonce before estimate to avoid stale nonce races
+  const nonceBeforeEstimate = await publicClient.readContract({
+    address: ENTRY_POINT,
+    abi: entryPointAbi,
+    functionName: "getNonce",
+    args: [smartAccount, 0n],
+  });
+  const userOpNonce = BigInt(userOpBase.nonce);
+  if (nonceBeforeEstimate !== userOpNonce) {
+    userOpBase.nonce = `0x${nonceBeforeEstimate.toString(16)}`;
+    const patchedPacked = toPackedUserOp(userOpBase);
+    const patchedHash = computeUserOpHash(patchedPacked, ENTRY_POINT, chainIdHex);
+    userOpBase.signature = await eoa.signMessage({
+      message: { raw: patchedHash as `0x${string}` },
+    });
+    console.log(`⚠️ Nonce updated before estimate -> ${nonceBeforeEstimate.toString()}`);
+  }
+
   console.log("\n  → Estimating gas via bundler...");
   const estimate = await bundlerRpc<{
     preVerificationGas: string;
     verificationGasLimit: string;
     callGasLimit: string;
+    paymasterVerificationGasLimit?: string;
+    paymasterPostOpGasLimit?: string;
   }>(bundlerUrl, "eth_estimateUserOperationGas", [userOpBase, ENTRY_POINT]);
 
   console.log(`    preVeri: ${BigInt(estimate.preVerificationGas).toString()}`);
@@ -455,10 +506,14 @@ async function main() {
   userOpBase.verificationGasLimit = estimate.verificationGasLimit;
   userOpBase.callGasLimit = estimate.callGasLimit;
   userOpBase.preVerificationGas = estimate.preVerificationGas;
+  if (PAYMASTER) {
+    userOpBase.paymasterVerificationGasLimit = normalizeHex(estimate.paymasterVerificationGasLimit);
+    userOpBase.paymasterPostOpGasLimit = normalizeHex(estimate.paymasterPostOpGasLimit);
+  }
 
   // Get gas prices
-  const feeData = await publicClient.getFeeData();
-  const maxFeePerGas = feeData.gasPrice || 1_000_000n;
+  const currentGasPrice = await publicClient.getGasPrice();
+  const maxFeePerGas = currentGasPrice || 1_000_000n;
   const maxPriorityFeePerGas = (maxFeePerGas * 10n) / 100n; // 10% of max
 
   userOpBase.maxFeePerGas = "0x" + maxFeePerGas.toString(16);
@@ -471,7 +526,7 @@ async function main() {
 
   // Sign final hash
   const finalSig = await eoa.signMessage({
-    message: { raw: finalHash },
+    message: { raw: finalHash as `0x${string}` },
   });
 
   userOpBase.signature = finalSig;
@@ -479,6 +534,24 @@ async function main() {
   console.log("✅ UserOp signed with final gas values");
 
   // ─── Step 5: Send to bundler ──────────────────────────────────────
+
+  // Re-read nonce again before send; if changed, re-sign final payload
+  const nonceBeforeSend = await publicClient.readContract({
+    address: ENTRY_POINT,
+    abi: entryPointAbi,
+    functionName: "getNonce",
+    args: [smartAccount, 0n],
+  });
+  const currentSignedNonce = BigInt(userOpBase.nonce);
+  if (nonceBeforeSend !== currentSignedNonce) {
+    userOpBase.nonce = `0x${nonceBeforeSend.toString(16)}`;
+    const repacked = toPackedUserOp(userOpBase);
+    const rehash = computeUserOpHash(repacked, ENTRY_POINT, chainIdHex);
+    userOpBase.signature = await eoa.signMessage({
+      message: { raw: rehash as `0x${string}` },
+    });
+    console.log(`⚠️ Nonce updated before send -> ${nonceBeforeSend.toString()}`);
+  }
 
   console.log("\n  → Sending UserOp to bundler...");
   const userOpHash = await bundlerRpc<string>(bundlerUrl, "eth_sendUserOperation", [

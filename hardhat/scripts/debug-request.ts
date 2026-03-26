@@ -81,6 +81,9 @@ async function main() {
     args: [owner],
   });
 
+  const accountCode = await publicClient.getBytecode({ address: smartAccount });
+  const accountExists = !!accountCode && accountCode !== "0x";
+
   // Get nonce
   const nonce = await publicClient.readContract({
     address: ENTRY_POINT,
@@ -88,6 +91,9 @@ async function main() {
     functionName: "getNonce",
     args: [smartAccount, 0n],
   });
+
+  console.log(`Account exists: ${accountExists}`);
+  console.log(`Nonce (EntryPoint): ${nonce.toString()} / 0x${nonce.toString(16)}`);
 
   // Get quote
   const quote = await publicClient.readContract({
