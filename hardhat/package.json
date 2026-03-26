@@ -4,7 +4,13 @@
   "type": "module",
   "scripts": {
     "compile": "hardhat compile",
-    "aa:flow:testnet": "hardhat run --network rskTestnet scripts/aa-flow.ts"
+    "aa:flow:testnet": "hardhat run --network rskTestnet scripts/aa-flow.ts",
+    "sovryn:verify:testnet": "hardhat run --network rskTestnet scripts/verify-sovryn-testnet.ts",
+    "sovryn:deploy:testnet": "hardhat run --network rskTestnet scripts/deploy-sovryn-margin.ts",
+    "sovryn:open:testnet": "hardhat run --network rskTestnet scripts/open-position.ts",
+    "sovryn:wrap-and-trade:testnet": "hardhat run --network rskTestnet scripts/wrap-and-trade.ts",
+    "doc:mint:testnet": "hardhat run --network rskTestnet scripts/mint-doc.ts",
+    "doc:mint:mainnet": "hardhat run --network rskMainnet scripts/mint-doc.ts"
   },
   "dependencies": {
     "@account-abstraction/contracts": "^0.7.0",

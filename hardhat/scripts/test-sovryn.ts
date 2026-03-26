@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { network } from "hardhat";
-import { parseEther, zeroAddress } from "viem";
+
+type HexAddress = `0x${string}`;
 
 async function main() {
   const { viem } = await network.connect();
@@ -17,7 +18,13 @@ async function main() {
   console.log("Deployer:", deployer.account.address);
 
   // Mock addresses for testing (on local network, these can be anything)
-  const mockAddresses = {
+  const mockAddresses: {
+    iDOC: HexAddress;
+    iRBTC: HexAddress;
+    DoC: HexAddress;
+    WRBTC: HexAddress;
+    SovrynProtocol: HexAddress;
+  } = {
     iDOC: "0x0000000000000000000000000000000000000001",
     iRBTC: "0x0000000000000000000000000000000000000002",
     DoC: "0x0000000000000000000000000000000000000003",
@@ -42,7 +49,13 @@ async function main() {
 
     // Test updateContracts (public now)
     console.log("\n🔄 Testing updateContracts (public function)...");
-    const newAddresses = {
+    const newAddresses: {
+      iDOC: HexAddress;
+      iRBTC: HexAddress;
+      DoC: HexAddress;
+      WRBTC: HexAddress;
+      SovrynProtocol: HexAddress;
+    } = {
       iDOC: "0x0000000000000000000000000000000000000010",
       iRBTC: "0x0000000000000000000000000000000000000011",
       DoC: "0x0000000000000000000000000000000000000012",

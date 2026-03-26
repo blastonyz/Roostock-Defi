@@ -14,3 +14,11 @@ Smart account creada. tx: 0x1e2cda1731f55a33967896d4cf205b4a85767c182941a9ab450c
 [SPONSORED] Balance insuficiente para depositar en Paymaster. Obtén más tRBTC: https://faucet.rootstock.io/
 Balance smart account: 0
 Flujo AA base completado ✅
+
+--- Sovryn (RSK Testnet) ---
+iDOC:              0x74e00A8CeDdC752074aad367785bFae7034ed89f
+iRBTC:             0xe67Fe227e0504e8e96A34C3594795756dC26e14B
+DoC:               0xCb46C0DdC60d18eFEB0e586c17AF6Ea36452DaE0
+WRBTC:             0x69fE5cEc81D5eF92600c1a0dB1f11986aB3758ab
+SovrynProtocol:    0x25380305f223B32FDB844152abD2E82BC5Ad99c3
+SovrynMarginTrader: 0xfbb205886f4dfcce3e3b35e14557914cb9d90668
