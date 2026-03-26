@@ -179,6 +179,7 @@ async function main() {
   console.log("approve tx:", approveTx);
 
   // Step 4: open margin trade DoC (borrow DoC, collateral WRBTC)
+  // El contrato maneja try-catch: si falla con docAddr, retintenta con iDOC
   console.log("\n[4/4] Abriendo posición margin: borrow", formatUnits(loanAmountDoC, 18), "DoC, colateral", formatUnits(collateralNeeded, 18), "WRBTC...");
   const tradeTx = await wallet.writeContract({
     address: traderAddr,

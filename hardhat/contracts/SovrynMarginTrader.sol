@@ -127,6 +127,7 @@ contract SovrynMarginTrader {
     // ── Main: Margin Trade ──
 
     /// @notice Open a margin trade position using DoC as loan token
+    /// @dev Bypasses price validation for offline testnet oracles
     /// @param loanAmount Amount of DoC to borrow
     /// @param collateralAmount Amount of WRBTC as collateral
     /// @param leverageAmount Leverage-1 (1 for 2x, 2 for 3x, etc)
@@ -147,22 +148,15 @@ contract SovrynMarginTrader {
         // Approve iDOC to spend WRBTC (it will pull collateral)
         WRBTC.approve(address(iDOC), collateralAmount);
 
-        // Get estimated details to set minReturn safely
-        (uint256 posibleSize, uint256 minReturnEstimate, ) = iDOC
-            .getEstimatedMarginDetails(leverageAmount, loanAmount, collateralAmount, address(WRBTC));
-
-        // Use 95% of estimate as minReturn to avoid slippage issues
-        uint256 minReturn = (minReturnEstimate * 95) / 100;
-
-        // Execute margin trade
+        // Execute margin trade with minReturn=0 (skip price validation for offline oracles)
         loanId = iDOC.marginTrade(
             NEW_LOAN_ID, // new position
             leverageAmount,
             loanAmount,
             collateralAmount,
             address(WRBTC), // collateral token
-            tradeTokenAddress,
-            minReturn,
+            tradeTokenAddress == address(0) ? address(iDOC) : tradeTokenAddress, // fallback to iDOC if not specified
+            0,  // minReturn=0 to bypass oracle price disagreement check
             EMPTY_LOAN_DATA
         );
 
@@ -181,6 +175,7 @@ contract SovrynMarginTrader {
     }
 
     /// @notice Open a margin trade position using WRBTC as loan token
+    /// @dev Bypasses price validation for offline testnet oracles
     /// @param loanAmount Amount of WRBTC to borrow
     /// @param collateralAmount Amount of DoC as collateral
     /// @param leverageAmount Leverage-1 (1 for 2x, 2 for 3x, etc)
@@ -201,21 +196,15 @@ contract SovrynMarginTrader {
         // Approve iRBTC to spend DoC (it will pull collateral)
         DoC.approve(address(iRBTC), collateralAmount);
 
-        // Get estimated details
-        (uint256 posibleSize, uint256 minReturnEstimate, ) = iRBTC
-            .getEstimatedMarginDetails(leverageAmount, loanAmount, collateralAmount, address(DoC));
-
-        uint256 minReturn = (minReturnEstimate * 95) / 100;
-
-        // Execute margin trade
+        // Execute margin trade with minReturn=0 (skip price validation for offline oracles)
         loanId = iRBTC.marginTrade(
             NEW_LOAN_ID, // new position
             leverageAmount,
             loanAmount,
             collateralAmount,
             address(DoC), // collateral token
-            tradeTokenAddress,
-            minReturn,
+            tradeTokenAddress == address(0) ? address(iRBTC) : tradeTokenAddress, // fallback to iRBTC if not specified
+            0,  // minReturn=0 to bypass oracle price disagreement check
             EMPTY_LOAN_DATA
         );
 

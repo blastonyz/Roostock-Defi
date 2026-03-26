@@ -10,7 +10,10 @@
     "sovryn:open:testnet": "hardhat run --network rskTestnet scripts/open-position.ts",
     "sovryn:wrap-and-trade:testnet": "hardhat run --network rskTestnet scripts/wrap-and-trade.ts",
     "doc:mint:testnet": "hardhat run --network rskTestnet scripts/mint-doc.ts",
-    "doc:mint:mainnet": "hardhat run --network rskMainnet scripts/mint-doc.ts"
+    "doc:mint:mainnet": "hardhat run --network rskMainnet scripts/mint-doc.ts",
+    "uniswap:deploy:testnet": "hardhat run --network rskTestnet scripts/deploy-uniswap-swapper.ts",
+    "uniswap:swap:testnet": "hardhat run --network rskTestnet scripts/uniswap-swap.ts",
+    "uniswap:verify": "hardhat run --network rskTestnet scripts/verify-uniswap-rsk.ts"
   },
   "dependencies": {
     "@account-abstraction/contracts": "^0.7.0",
