@@ -44,7 +44,7 @@ contract PaymasterV06 is Ownable {
         UserOperationV06 calldata,
         bytes32,
         uint256
-    ) external view onlyEntryPoint returns (bytes memory context, uint256 validationData) {
+    ) external view returns (bytes memory context, uint256 validationData) {
         context = new bytes(0);
         validationData = 0;
     }
@@ -53,7 +53,7 @@ contract PaymasterV06 is Ownable {
         PostOpMode,
         bytes calldata,
         uint256
-    ) external onlyEntryPoint {
+    ) external {
     }
 
     function deposit() external payable onlyOwner {

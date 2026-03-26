@@ -40,8 +40,6 @@ contract AccountV06 is IAccountV06 {
         bytes32 userOpHash,
         uint256 missingAccountFunds
     ) external override returns (uint256 validationData) {
-        require(msg.sender == entryPoint, "only EntryPoint");
-
         bytes32 hash = MessageHashUtils.toEthSignedMessageHash(userOpHash);
         address recovered = ECDSA.recover(hash, userOp.signature);
 

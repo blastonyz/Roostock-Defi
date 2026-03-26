@@ -5,20 +5,27 @@ dotenv.config({ override: true });
 // EntryPoint v0.6 ABI (minimal)
 const ENTRYPOINT_ABI = [
     "function getSenderAddress(bytes calldata initCode) external",
+    "function getNonce(address sender, uint192 key) external view returns (uint256 nonce)",
     "function getUserOpHash(tuple(address sender,uint256 nonce,bytes initCode,bytes callData,uint256 callGasLimit,uint256 verificationGasLimit,uint256 preVerificationGas,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,bytes paymasterAndData,bytes signature) userOp) external view returns (bytes32)",
     "function handleOps(tuple(address,uint256,bytes,bytes,uint256,uint256,uint256,uint256,uint256,bytes,bytes)[] calldata ops, address payable beneficiary)",
     "function estimateGas(tuple(address,uint256,bytes,bytes,uint256,uint256,uint256,uint256,uint256,bytes,bytes) userOp, bytes calldata initCode, bytes calldata signature) external"
 ];
 
 // Importar artefactos locales
-import AccountArtifact from "../artifacts/contracts/Account.sol/Account.json";
-import AccountFactoryArtifact from "../artifacts/contracts/AccountFactory.sol/AccountFactory.json";
+import AccountArtifact from "../artifacts/contracts/AccountV06.sol/AccountV06.json";
+import AccountFactoryArtifact from "../artifacts/contracts/AccountFactoryV06.sol/AccountFactoryV06.json";
 
 // ===== CONFIG v0.6 =====
 const ENTRYPOINT_ADDRESS = process.env.ENTRY_POINT_ADDRESS || "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789";
 const FACTORY_ADDRESS = process.env.EXISTING_FACTORY_ADDRESS || "0xbfcb48c54cbf62488bbef4c53137c8d6659deb35";
 const PAYMASTER_ADDRESS = process.env.EXISTING_PAYMASTER_ADDRESS || "0xd8ed7139feef8775c8a6c9974da8bb8df22868c1";
 const CHAIN_ID = 31; // Rootstock testnet
+const USE_PAYMASTER = (process.env.AA_USE_PAYMASTER || "false").toLowerCase() === "true";
+const PREFUND_TARGET = ethers.parseEther("0.0002");
+
+function buildPaymasterAndData(paymaster: string): string {
+    return paymaster.toLowerCase().startsWith("0x") ? paymaster : `0x${paymaster}`;
+}
 
 // UserOp formato unpacked para bundler
 type UserOpUnpacked = {
@@ -105,22 +112,10 @@ async function main() {
         .slice(2);
 
     let sender: string | undefined;
-
     try {
-        await entryPoint.getSenderAddress(initCode);
-    } catch (ex: any) {
-        const revertData = ex?.data as string | undefined;
-        if (typeof revertData === "string" && revertData.length >= 40) {
-            sender = ethers.getAddress("0x" + revertData.slice(-40));
-        }
-    }
-
-    if (!sender) {
-        try {
-            sender = await factory.getAddress(wallet.address);
-        } catch {
-            // ignore
-        }
+        sender = await factory["getAddress(address)"](wallet.address);
+    } catch {
+        // ignore
     }
 
     if (!sender) {
@@ -149,15 +144,24 @@ async function main() {
     }
 
     // ===== STEP 3: Verificar balance =====
-    const currentBalance = await provider.getBalance(sender!);
+    let currentBalance = await provider.getBalance(sender!);
     console.log(`💰 Account balance: ${ethers.formatEther(currentBalance)} tRBTC`);
+
+    if (!USE_PAYMASTER && currentBalance < PREFUND_TARGET) {
+        console.log("⛽ Prefunding smart account (no paymaster mode)...");
+        const topup = PREFUND_TARGET - currentBalance;
+        const tx = await wallet.sendTransaction({ to: sender, value: topup });
+        await tx.wait();
+        currentBalance = await provider.getBalance(sender);
+        console.log(`✅ New account balance: ${ethers.formatEther(currentBalance)} tRBTC`);
+    }
 
     // ===== STEP 4: Armar UserOp base SIN firma =====
     console.log("\n🔧 Building UserOp...");
 
     const userOpForHash: UserOpUnpacked = {
         sender: sender!,
-        nonce: "0x0",
+        nonce: "0x" + (await entryPoint.getNonce(sender!, 0)).toString(16),
         initCode,
         callData: account.interface.encodeFunctionData("execute", [
             wallet.address, // destino (en este caso a sí mismo, o target)
@@ -169,7 +173,7 @@ async function main() {
         preVerificationGas: "0x1d4c0",   // 120k
         maxFeePerGas: "0x0",             // será reemplazado
         maxPriorityFeePerGas: "0x0",     // será reemplazado
-        paymasterAndData: "0x",          // sin paymaster por ahora
+        paymasterAndData: USE_PAYMASTER ? buildPaymasterAndData(PAYMASTER_ADDRESS) : "0x",
         signature: "0x"                  // placeholder para hash
     };
 
@@ -229,9 +233,11 @@ async function main() {
 
     // ===== STEP 8: Obtener gas prices =====
     const { maxFeePerGas, maxPriorityFeePerGas } = await provider.getFeeData();
+    const finalMaxFeePerGas = gasEstimate.maxFeePerGas || (maxFeePerGas ? "0x" + maxFeePerGas.toString(16) : "0x189c090");
+    const finalMaxPriorityFeePerGas = gasEstimate.maxPriorityFeePerGas || (maxPriorityFeePerGas ? "0x" + maxPriorityFeePerGas.toString(16) : finalMaxFeePerGas);
 
     console.log(
-        `\n⛽ Gas prices:\n  maxFeePerGas: ${maxFeePerGas?.toString()}\n  maxPriorityFeePerGas: ${maxPriorityFeePerGas?.toString()}`
+        `\n⛽ Gas prices:\n  maxFeePerGas: ${finalMaxFeePerGas}\n  maxPriorityFeePerGas: ${finalMaxPriorityFeePerGas}`
     );
 
     // ===== STEP 9: Armar UserOp final =====
@@ -243,8 +249,8 @@ async function main() {
         callGasLimit: gasEstimate.callGasLimit || userOpForHash.callGasLimit,
         verificationGasLimit: gasEstimate.verificationGasLimit || userOpForHash.verificationGasLimit,
         preVerificationGas: gasEstimate.preVerificationGas || userOpForHash.preVerificationGas,
-        maxFeePerGas: "0x" + (maxFeePerGas?.toString(16) || "1"),
-        maxPriorityFeePerGas: "0x" + (maxPriorityFeePerGas?.toString(16) || "1"),
+        maxFeePerGas: finalMaxFeePerGas,
+        maxPriorityFeePerGas: finalMaxPriorityFeePerGas,
         paymasterAndData: userOpForHash.paymasterAndData,
         signature: sig
     };
@@ -282,6 +288,11 @@ async function main() {
     }
     console.log("✅ UserOp hash:", opHash);
 
+    const byHash = await bundlerRpc<unknown | null>(bundlerRpcUrl, "eth_getUserOperationByHash", [opHash]);
+    if (!byHash) {
+        console.log("⚠️ Bundler devolvió hash pero no dejó el op en mempool (eth_getUserOperationByHash = null)");
+    }
+
     // ===== STEP 11: Esperar receipt =====
     console.log("\n⏳ Waiting for receipt...");
 
@@ -289,7 +300,7 @@ async function main() {
     let attempts = 0;
     const maxAttempts = 30;
 
-    while (!receipt && attempts < maxAttempts) {
+    while ((receipt === null || !receipt.result) && attempts < maxAttempts) {
         try {
             receipt = (await fetch(bundlerRpcUrl, {
                 method: "POST",
@@ -314,7 +325,7 @@ async function main() {
         process.stdout.write(".");
     }
 
-    if (!receipt) {
+    if (!receipt || !receipt.result) {
         console.log("\n⚠️  Receipt timeout after 60 seconds");
     }
 }

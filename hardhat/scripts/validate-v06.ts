@@ -105,24 +105,12 @@ async function main() {
             .encodeFunctionData("createAccount", [wallet.address])
             .slice(2);
 
-        let sender: string | undefined;
-        try {
-            await entryPoint.getSenderAddress(initCode);
-        } catch (ex: any) {
-            const revertData = ex?.data as string | undefined;
-            if (typeof revertData === "string" && revertData.length >= 40) {
-                sender = ethers.getAddress("0x" + revertData.slice(-40));
-            }
-        }
-
-        if (!sender) {
-            const factory = new ethers.Contract(
-                FACTORY_ADDRESS,
-                AccountFactoryArtifact.abi,
-                provider
-            );
-            sender = await factory.getAddress(wallet.address);
-        }
+        const factory = new ethers.Contract(
+            FACTORY_ADDRESS,
+            AccountFactoryArtifact.abi,
+            provider
+        );
+        const sender = await factory["getAddress(address)"](wallet.address);
 
         if (!sender) {
             throw new Error("No se pudo derivar sender desde getSenderAddress");
