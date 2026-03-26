@@ -15,7 +15,10 @@
     "uniswap:swap:testnet": "hardhat run --network rskTestnet scripts/uniswap-swap.ts",
     "uniswap:verify": "hardhat run --network rskTestnet scripts/verify-uniswap-rsk.ts",
     "sovryn:swap:deploy": "hardhat run --network rskTestnet scripts/deploy-sovryn-swapper.ts",
-    "sovryn:swap:testnet": "hardhat run --network rskTestnet scripts/sovryn-amm-swap.ts"
+    "sovryn:swap:testnet": "hardhat run --network rskTestnet scripts/sovryn-amm-swap.ts",
+    "aa:deploy": "hardhat run --network rskTestnet scripts/deploy-aa.ts",
+    "aa:swap": "hardhat run --network rskTestnet scripts/aa-swap.ts",
+    "aa:swap:direct": "hardhat run --network rskTestnet scripts/aa-swap-direct.ts"
   },
   "dependencies": {
     "@account-abstraction/contracts": "^0.7.0",

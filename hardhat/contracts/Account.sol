@@ -39,6 +39,18 @@ contract Account is IAccount {
         _call(dest, value, func);
     }
 
+    function executeBatch(
+        address[] calldata dest,
+        uint256[] calldata value,
+        bytes[] calldata func
+    ) external {
+        require(msg.sender == entryPoint, "only EntryPoint");
+        require(dest.length == value.length && dest.length == func.length, "length mismatch");
+        for (uint256 i = 0; i < dest.length; i++) {
+            _call(dest[i], value[i], func[i]);
+        }
+    }
+
     function _call(address target, uint256 value, bytes memory data) internal {
         (bool success, bytes memory result) = target.call{value: value}(data);
         if (!success) {
