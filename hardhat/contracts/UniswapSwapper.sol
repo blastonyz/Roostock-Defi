@@ -24,7 +24,7 @@ interface IUniswapV2Router {
 /// @title UniswapSwapper
 /// @notice Simple contract to perform Uniswap V2 swaps on RSK
 contract UniswapSwapper {
-    address public constant UNISWAP_V2_ROUTER = 0x7a250d5630b4cf539739df2c5dacb4c659f2488d;
+    address public constant UNISWAP_V2_ROUTER = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
 
     event SwapExecuted(
         address indexed user,

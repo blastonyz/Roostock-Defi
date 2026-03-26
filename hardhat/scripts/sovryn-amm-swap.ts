@@ -46,8 +46,8 @@ const swapperAbi = [
 ] as const;
 
 async function main() {
-  const swapperAddr = process.env.UNISWAP_SWAPPER_ADDRESS;
-  if (!swapperAddr || !isAddress(swapperAddr)) throw new Error("UNISWAP_SWAPPER_ADDRESS no definido en .env");
+  const swapperAddr = process.env.SOVRYN_SWAPPER_ADDRESS;
+  if (!swapperAddr || !isAddress(swapperAddr)) throw new Error("SOVRYN_SWAPPER_ADDRESS no definido en .env");
 
   const { viem } = await network.connect();
   const pub = await viem.getPublicClient();
@@ -58,8 +58,8 @@ async function main() {
   const account = wallet.account.address;
   console.log("Wallet:", account);
 
-  const WRBTC = getAddress("0x69fE5cEc81D5eF92600c1a0dB1F11986AB3758ab");
-  const DOC = getAddress("0xCB46C0DdC60d18eFEB0E586C17Af6ea36452DaE0");
+  const WRBTC = getAddress(process.env.SOVRYN_WRBTC_ADDRESS!);
+  const DOC = getAddress(process.env.SOVRYN_DOC_ADDRESS!);
   const swapper = getAddress(swapperAddr);
 
   // Check WRBTC balance
@@ -72,7 +72,7 @@ async function main() {
   console.log("WRBTC balance:", formatUnits(balance, 18));
 
   if (balance === 0n) {
-    console.log("❌ No WRBTC balance. Wrap tRBTC primero.");
+    console.log("❌ No hay WRBTC. Wrap tRBTC primero.");
     return;
   }
 
@@ -87,7 +87,7 @@ async function main() {
   console.log(`Quote: ${formatUnits(amountIn, 18)} WRBTC → ${formatUnits(quote, 18)} DoC`);
 
   // Approve
-  console.log("\n[1/3] Aprobando WRBTC...");
+  console.log("\n[1/3] Aprobando WRBTC al swapper...");
   const approveTxHash = await wallet.writeContract({
     address: WRBTC,
     abi: erc20Abi,
@@ -97,9 +97,9 @@ async function main() {
   await pub.waitForTransactionReceipt({ hash: approveTxHash });
   console.log("✅ Aprobado");
 
-  // Swap with 1% slippage
-  console.log("\n[2/3] Ejecutando swap...");
-  const minAmountOut = (quote * 99n) / 100n;
+  // Swap with 2% slippage
+  console.log("\n[2/3] Ejecutando swap via Sovryn AMM...");
+  const minAmountOut = (quote * 98n) / 100n; // 2% slippage
   const swapTxHash = await wallet.writeContract({
     address: swapper,
     abi: swapperAbi,
@@ -119,7 +119,7 @@ async function main() {
   });
   console.log("DoC balance:", formatUnits(docBalance, 18));
 
-  console.log("\n✅ Swap completo!");
+  console.log("\n✅ Swap completo! WRBTC → DoC via Sovryn AMM");
 }
 
 main().catch(console.error);

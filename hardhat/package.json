@@ -13,7 +13,9 @@
     "doc:mint:mainnet": "hardhat run --network rskMainnet scripts/mint-doc.ts",
     "uniswap:deploy:testnet": "hardhat run --network rskTestnet scripts/deploy-uniswap-swapper.ts",
     "uniswap:swap:testnet": "hardhat run --network rskTestnet scripts/uniswap-swap.ts",
-    "uniswap:verify": "hardhat run --network rskTestnet scripts/verify-uniswap-rsk.ts"
+    "uniswap:verify": "hardhat run --network rskTestnet scripts/verify-uniswap-rsk.ts",
+    "sovryn:swap:deploy": "hardhat run --network rskTestnet scripts/deploy-sovryn-swapper.ts",
+    "sovryn:swap:testnet": "hardhat run --network rskTestnet scripts/sovryn-amm-swap.ts"
   },
   "dependencies": {
     "@account-abstraction/contracts": "^0.7.0",
