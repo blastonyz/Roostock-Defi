@@ -6,6 +6,7 @@
     "compile": "hardhat compile",
     "aa:flow:testnet": "hardhat run --network rskTestnet scripts/aa-flow.ts",
     "aa:execute:v06": "hardhat run --network rskTestnet scripts/execute-v06.ts",
+    "aa:execute:v06:direct": "hardhat run --network rskTestnet scripts/execute-v06-direct.ts",
     "aa:deploy:v06": "hardhat run --network rskTestnet scripts/deploy-aa-v06.ts",
     "sovryn:verify:testnet": "hardhat run --network rskTestnet scripts/verify-sovryn-testnet.ts",
     "sovryn:deploy:testnet": "hardhat run --network rskTestnet scripts/deploy-sovryn-margin.ts",

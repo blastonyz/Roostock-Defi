@@ -10,7 +10,7 @@ async function main() {
   const pub = await viem.getPublicClient();
 
   const paymaster = await viem.getContractAt("PaymasterV06", paymasterAddress);
-  const amount = parseEther("0.00005");
+  const amount = parseEther("0.0002");
 
   const tx = await paymaster.write.deposit({ value: amount });
   await pub.waitForTransactionReceipt({ hash: tx });
