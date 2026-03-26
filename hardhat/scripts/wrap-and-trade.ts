@@ -92,7 +92,7 @@ async function main() {
   // WRAP_AMOUNT_RBTC: tRBTC to wrap into WRBTC (collateral)
   // SOVRYN_LEVERAGE: full multiplier in 1e18 units ("2" = 2x, "3" = 3x)
   // loanAmountDoC = 0: don't provide DoC ourselves, let the pool lever up via collateral
-  const wrapAmountRBTC = parseUnits(process.env.WRAP_AMOUNT_RBTC ?? "0.0001", 18);
+  const wrapAmountRBTC = parseUnits(process.env.WRAP_AMOUNT_RBTC ?? "0", 18);
   const loanAmountDoC = 0n;
   const leverageAmount = parseUnits(process.env.SOVRYN_LEVERAGE ?? "2", 18);
 
@@ -100,17 +100,17 @@ async function main() {
 
   console.log("Wallet:", wallet.account.address);
   console.log("tRBTC balance:", formatUnits(tRBTCBalance, 18));
-  console.log("Wrap amount:", formatUnits(wrapAmountRBTC, 18), "RBTC → WRBTC (todo es colateral)");
+  console.log("Wrap amount:", formatUnits(wrapAmountRBTC, 18), "RBTC → WRBTC (0 = usar WRBTC ya disponible)");
   console.log("Loan DoC: 0 (pool aporta el DoC via leverage)");
   console.log("Leverage:", formatUnits(leverageAmount, 18) + "x");
 
-  if (tRBTCBalance < wrapAmountRBTC + parseUnits("0.00005", 18)) {
+  if (wrapAmountRBTC > 0n && tRBTCBalance < wrapAmountRBTC + parseUnits("0.00005", 18)) {
     throw new Error(
       `tRBTC insuficiente. Balance: ${formatUnits(tRBTCBalance, 18)}, necesitás al menos ${formatUnits(wrapAmountRBTC, 18)} + gas.`,
     );
   }
 
-  // Step 1: wrap tRBTC → WRBTC via deposit()
+  // Step 1: wrap tRBTC → WRBTC via deposit() (opcional, se salta si wrapAmountRBTC=0)
   const wrbtcBefore = await publicClient.readContract({
     address: wrbtcAddr,
     abi: wrbtcAbi,
@@ -118,30 +118,35 @@ async function main() {
     args: [wallet.account.address],
   });
 
-  console.log("\n[1/4] Wrapping", formatUnits(wrapAmountRBTC, 18), "tRBTC → WRBTC...");
-  const wrapTx = await wallet.writeContract({
-    address: wrbtcAddr,
-    abi: wrbtcAbi,
-    functionName: "deposit",
-    value: wrapAmountRBTC,
-    account: wallet.account,
-    chain: wallet.chain,
-  });
-  await publicClient.waitForTransactionReceipt({ hash: wrapTx });
-  console.log("wrap tx:", wrapTx);
-
-  const wrbtcAfterWrap = await publicClient.readContract({
-    address: wrbtcAddr,
-    abi: wrbtcAbi,
-    functionName: "balanceOf",
-    args: [wallet.account.address],
-  });
-  console.log(
-    "WRBTC balance: antes",
-    formatUnits(wrbtcBefore, 18),
-    "→ ahora",
-    formatUnits(wrbtcAfterWrap, 18),
-  );
+  let wrbtcAfterWrap: bigint;
+  if (wrapAmountRBTC > 0n) {
+    console.log("\n[1/4] Wrapping", formatUnits(wrapAmountRBTC, 18), "tRBTC → WRBTC...");
+    const wrapTx = await wallet.writeContract({
+      address: wrbtcAddr,
+      abi: wrbtcAbi,
+      functionName: "deposit",
+      value: wrapAmountRBTC,
+      account: wallet.account,
+      chain: wallet.chain,
+    });
+    await publicClient.waitForTransactionReceipt({ hash: wrapTx });
+    console.log("wrap tx:", wrapTx);
+    wrbtcAfterWrap = await publicClient.readContract({
+      address: wrbtcAddr,
+      abi: wrbtcAbi,
+      functionName: "balanceOf",
+      args: [wallet.account.address],
+    });
+    console.log("WRBTC balance: antes", formatUnits(wrbtcBefore, 18), "→ ahora", formatUnits(wrbtcAfterWrap, 18));
+  } else {
+    console.log("\n[1/4] Sin wrap (WRAP_AMOUNT_RBTC=0), usando WRBTC disponible:", formatUnits(wrbtcBefore, 18));
+    wrbtcAfterWrap = await publicClient.readContract({
+      address: wrbtcAddr,
+      abi: wrbtcAbi,
+      functionName: "balanceOf",
+      args: [wallet.account.address],
+    });
+  }
 
   // Step 2: get estimated position size (informativo)
   // Args: leverage, loanDoC=0 (pool aporta todo), collateral=nuestro WRBTC
