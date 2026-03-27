@@ -4,27 +4,9 @@
   "type": "module",
   "scripts": {
     "compile": "hardhat compile",
-    "aa:flow:testnet": "hardhat run --network rskTestnet scripts/aa-flow.ts",
-    "aa:execute:v06": "hardhat run --network rskTestnet scripts/execute-v06.ts",
-    "aa:execute:v06:direct": "hardhat run --network rskTestnet scripts/execute-v06-direct.ts",
-    "aa:deploy:v06": "hardhat run --network rskTestnet scripts/deploy-aa-v06.ts",
-    "sovryn:verify:testnet": "hardhat run --network rskTestnet scripts/verify-sovryn-testnet.ts",
-    "sovryn:deploy:testnet": "hardhat run --network rskTestnet scripts/deploy-sovryn-margin.ts",
-    "sovryn:open:testnet": "hardhat run --network rskTestnet scripts/open-position.ts",
-    "sovryn:wrap-and-trade:testnet": "hardhat run --network rskTestnet scripts/wrap-and-trade.ts",
-    "doc:mint:testnet": "hardhat run --network rskTestnet scripts/mint-doc.ts",
-    "doc:mint:mainnet": "hardhat run --network rskMainnet scripts/mint-doc.ts",
-    "uniswap:deploy:testnet": "hardhat run --network rskTestnet scripts/deploy-uniswap-swapper.ts",
-    "uniswap:swap:testnet": "hardhat run --network rskTestnet scripts/uniswap-swap.ts",
-    "uniswap:verify": "hardhat run --network rskTestnet scripts/verify-uniswap-rsk.ts",
-    "sovryn:swap:deploy": "hardhat run --network rskTestnet scripts/deploy-sovryn-swapper.ts",
-    "sovryn:swap:testnet": "hardhat run --network rskTestnet scripts/sovryn-amm-swap.ts",
-    "aa:deploy": "hardhat run --network rskTestnet scripts/deploy-aa.ts",
-    "aa:swap": "hardhat run --network rskTestnet scripts/aa-swap.ts",
-    "aa:swap:direct": "hardhat run --network rskTestnet scripts/aa-swap-direct.ts"
+    "demo": "hardhat run --network rskTestnet scripts/sovryn-amm-swap.ts"
   },
   "dependencies": {
-    "@account-abstraction/contracts": "^0.7.0",
     "@openzeppelin/contracts": "^5.4.0",
     "dotenv": "^16.6.1"
   },
