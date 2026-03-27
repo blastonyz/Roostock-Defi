@@ -1,36 +1,68 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Defiar - Rootstock Swap Frontend
 
-## Getting Started
+Nueva versión del frontend de Defi App construida sobre **Rootstock Testnet** con **Sovryn AMM**.
 
-First, run the development server:
+## Stack
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **Next.js 16** - React framework
+- **Wagmi + RainbowKit** - Web3 wallet connections
+- **React Query** - State management
+- **Tailwind CSS** - Styling
+- **Zod** - Form validation
+
+## Providers
+
+```
+AppProviders (Wagmi + RainbowKit)
+  └── SovrynProvider (Swap state & contracts)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### SovrynProvider
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Estado globalizado para swaps de Sovryn:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```typescript
+const { 
+  isConnected,    // Boolean: Wallet conectada?
+  fromAmount,     // String: Cantidad a swapear
+  toAmount,       // String: Cantidad recibida
+  executeSwap,    // Function: Ejecutar el swap
+  contracts       // Object: Direcciones de contrato
+} = useSovryn();
+```
 
-## Learn More
+## Configuración
 
-To learn more about Next.js, take a look at the following resources:
+1. Instala dependencias:
+```bash
+npm install
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. Configura `.env`:
+```env
+NEXT_PUBLIC_RPC_URL=tu-rpc-url
+NEXT_PUBLIC_ROOTSTOCK_RPC_URL=tu-rpc-url-personal
+NEXT_PUBLIC_SOVRYN_WRBTC_ADDRESS=0x69fE5cEc81D5eF92600c1a0dB1f11986aB3758ab
+NEXT_PUBLIC_SOVRYN_DOC_ADDRESS=0xCb46C0DdC60d18eFEB0e586c17AF6Ea36452DaE0
+NEXT_PUBLIC_SOVRYN_SWAPPER_ADDRESS=0x09c8a630b50412542bb7c4c149e72983db208e3c
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+3. Dev:
+```bash
+npm run dev
+```
 
-## Deploy on Vercel
+Accede a [http://localhost:3000](http://localhost:3000)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Carpeta de Contextos
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `app-providers.tsx` - Configuración de Wagmi + RainbowKit para Rootstock testnet
+- `sovryn-context.tsx` - Estado y lógica del swap de Sovryn
+
+## Próximos Pasos
+
+- [ ] Componentes UI para swap (input, output, quote, button)
+- [ ] Integrar lógica del swap desde `../hardhat/scripts/sovryn-amm-swap.ts`
+- [ ] Agregar visualización de precios live
+- [ ] Historial de transacciones
+

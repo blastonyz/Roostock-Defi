@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "compile": "hardhat compile",
-    "demo": "hardhat run --network rskTestnet scripts/sovryn-amm-swap.ts"
+    "demo": "hardhat run --network rskTestnet scripts/sovryn-amm-swap.ts",
+    "sync:abis": "hardhat run scripts/copy-abis.ts"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^5.4.0",

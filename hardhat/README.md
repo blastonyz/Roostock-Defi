@@ -1,33 +1,46 @@
-# Sample Hardhat 3 Beta Project (`node:test` and `viem`)
+# Rootstock-Defi Demo: Sovryn Swap
 
-This project showcases a Hardhat 3 Beta project using the native Node.js test runner (`node:test`) and the `viem` library for Ethereum interactions.
+Simple demo of WRBTC → DoC swap on Rootstock testnet via Sovryn AMM.
 
-To learn more about the Hardhat 3 Beta, please visit the [Getting Started guide](https://hardhat.org/docs/getting-started#getting-started-with-hardhat-3). To share your feedback, join our [Hardhat 3 Beta](https://hardhat.org/hardhat3-beta-telegram-group) Telegram group or [open an issue](https://github.com/NomicFoundation/hardhat/issues/new) in our GitHub issue tracker.
+## Quick Start
 
-## Project Overview
-
-This example project includes:
-
-- A simple Hardhat configuration file.
-- Foundry-compatible Solidity unit tests.
-- TypeScript integration tests using [`node:test`](nodejs.org/api/test.html), the new Node.js native test runner, and [`viem`](https://viem.sh/).
-- Examples demonstrating how to connect to different types of networks, including locally simulating OP mainnet.
-
-## Usage
-
-### Running Tests
-
-To run all the tests in the project, execute the following command:
-
-```shell
-npx hardhat test
+```bash
+npm install
+npm run demo
 ```
 
-You can also selectively run the Solidity or `node:test` tests:
+## What It Does
 
-```shell
-npx hardhat test solidity
-npx hardhat test nodejs
+Executes a token swap on Rootstock testnet:
+- **Input**: 0.0001 WRBTC
+- **Output**: ~6.5 DoC (via Sovryn AMM quote engine)
+- **Chain**: Rootstock Testnet (ChainID 31)
+- **Contracts**: Live Sovryn contracts on testnet
+
+## Setup
+
+1. Set `RSK_PRIVATE_KEY` in `.env` with your wallet's private key
+2. Wallet must have tRBTC on testnet (get from [faucet.rootstock.io](https://faucet.rootstock.io))
+3. Run: `npm run demo`
+
+## Output Example
+
+```
+Wallet: 0x0571235134dc15a00f02916987c2c16b5fc52e2a
+WRBTC balance: 0.0001
+
+Quote: 0.0001 WRBTC → 6.498 DoC
+✅ Approved WRBTC
+✅ Swap executed: 0xfcd01c19...
+✅ Final DoC balance: 12.97 DoC
+```
+
+## Files
+
+- `scripts/sovryn-amm-swap.ts` - Swap logic
+- `contracts/SovrynSwapper.sol` - Reference contract ABI
+- `.env` - Configuration (testnet RPC, addresses)
+
 ```
 
 ### Make a deployment to Sepolia
