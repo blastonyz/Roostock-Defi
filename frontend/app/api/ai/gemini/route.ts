@@ -122,7 +122,7 @@ function fallbackSignal(points: OhlcPoint[], forceTrade: boolean, riskMode: Risk
 export async function POST(request: NextRequest) {
   try {
     const apiKey = process.env.GEMINI_API_KEY?.trim();
-    const model = process.env.GEMINI_MODEL?.trim() || "gemini-1.5-flash";
+    const model = process.env.GEMINI_MODEL?.trim() || "gemini-2.0-flash";
     const body = (await request.json()) as {
       ohlc?: OhlcPoint[];
       pair?: string;
@@ -169,7 +169,7 @@ export async function POST(request: NextRequest) {
     ].join("\n");
 
     const geminiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`,
+      `https://generativelanguage.googleapis.com/v1/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
