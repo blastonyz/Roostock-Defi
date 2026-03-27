@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSovryn } from "@/contexts/sovryn-context";
 
 type OhlcPoint = {
@@ -32,6 +32,7 @@ type OhlcResponse = {
 };
 
 export function AiSwapAgentCard() {
+  const [mounted, setMounted] = useState(false);
   const {
     fromAmount,
     balances,
@@ -55,6 +56,21 @@ export function AiSwapAgentCard() {
   const [error, setError] = useState<string>("");
   const [riskMode, setRiskMode] = useState<RiskMode>("aggressive");
   const [forceTrade, setForceTrade] = useState(true);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div className="mt-6 rounded-2xl border border-cyan-400/20 bg-slate-950/80 p-5 backdrop-blur-sm">
+        <div className="h-5 w-28 rounded bg-cyan-400/10" />
+        <div className="mt-4 h-12 rounded-lg bg-slate-900/60" />
+        <div className="mt-3 h-16 rounded-xl border border-cyan-400/15 bg-slate-900/50" />
+        <div className="mt-3 h-10 rounded-lg bg-slate-900/60" />
+      </div>
+    );
+  }
 
   const fetchSignal = async () => {
     try {
@@ -160,7 +176,7 @@ export function AiSwapAgentCard() {
           <p className="text-xs uppercase tracking-wide text-cyan-300">Available Balances</p>
           <button
             onClick={() => void refreshBalances()}
-            disabled={balanceLoading || !isConnected || !isSupportedChain}
+            disabled={balanceLoading || !mounted || !isConnected || !isSupportedChain}
             className="rounded-md border border-cyan-400/30 bg-slate-900 px-2 py-1 text-xs text-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {balanceLoading ? "Refreshing..." : "Refresh"}
@@ -182,8 +198,8 @@ export function AiSwapAgentCard() {
 
         <button
           onClick={() => void applyAndExecute()}
-          disabled={!signal || loadingSignal || quoteLoading || swapLoading || wrapLoading || !isConnected || !isSupportedChain}
-          className="rounded-lg bg-gradient-to-r from-cyan-400 via-cyan-500 to-blue-600 px-5 py-2 text-sm font-semibold text-slate-950 transition hover:shadow-[0_0_25px_rgba(34,211,238,0.35)] disabled:cursor-not-allowed disabled:opacity-50"
+          disabled={!signal || loadingSignal || quoteLoading || swapLoading || wrapLoading || !mounted || !isConnected || !isSupportedChain}
+          className="btn-gradient-cyan rounded-lg px-5 py-2 text-sm font-semibold text-slate-950 transition disabled:cursor-not-allowed disabled:opacity-50"
         >
           Ejecutar recomendación
         </button>

@@ -19,9 +19,9 @@ export function Hero() {
           </div>
 
           <h1 className="text-4xl font-bold leading-tight text-white sm:text-5xl md:text-6xl lg:text-7xl">
-            Sovryn Swap
+            <span className="text-gradient-cyan">Sovryn Swap</span>
             <br />
-            <span className="text-gradient-cyan">on Rootstock</span>
+            <span>on Rootstock</span>
           </h1>
 
           <p className="mt-6 max-w-xl text-base leading-relaxed text-slate-300 sm:text-lg">
@@ -31,7 +31,7 @@ export function Hero() {
           <div className="mt-10 flex flex-col gap-4 sm:flex-row">
             <a
               href="#swap"
-              className="group inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-cyan-400 via-cyan-500 to-blue-600 px-7 py-3.5 text-sm font-semibold text-slate-950 transition-all hover:shadow-[0_0_35px_rgba(34,211,238,0.35)]"
+              className="btn-gradient-cyan group inline-flex items-center justify-center gap-2 rounded-lg px-7 py-3.5 text-sm font-semibold text-slate-950 transition-all"
             >
               Open Swap
               <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />

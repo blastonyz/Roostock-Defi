@@ -97,39 +97,40 @@ const fragmentShader = /* glsl */ `
     vec3 n = normalize(vWorldNormal);
     float fresnel = pow(1.0 - max(dot(viewDir, n), 0.0), 3.0);
 
-    vec3 navy     = vec3(0.020, 0.090, 0.180);
-    vec3 deepBlue = vec3(0.035, 0.220, 0.420);
-    vec3 cyan     = vec3(0.133, 0.827, 0.933);
-    vec3 electric = vec3(0.231, 0.510, 0.965);
-    vec3 ice      = vec3(0.780, 0.965, 1.000);
+    vec3 midnight = vec3(0.055, 0.030, 0.120);
+    vec3 purple   = vec3(0.220, 0.085, 0.390);
+    vec3 violet   = vec3(0.500, 0.200, 0.780);
+    vec3 cyan     = vec3(0.170, 0.820, 0.950);
+    vec3 pearl    = vec3(0.930, 0.900, 1.000);
 
     float t = vDisplacement * 1.5 + 0.5;
-    vec3 baseColor = mix(navy, deepBlue, smoothstep(0.0, 0.35, t));
-    baseColor = mix(baseColor, cyan, smoothstep(0.35, 0.70, t));
-    baseColor = mix(baseColor, electric, smoothstep(0.70, 1.0, t));
+    vec3 baseColor = mix(midnight, purple, smoothstep(0.0, 0.35, t));
+    baseColor = mix(baseColor, violet, smoothstep(0.35, 0.70, t));
+    baseColor = mix(baseColor, cyan, smoothstep(0.70, 1.0, t));
 
-    vec3 rimColor = mix(cyan, ice, fresnel * 0.75);
+    vec3 rimColor = mix(violet, pearl, fresnel * 0.75);
     vec3 color = mix(baseColor, rimColor, fresnel * 0.60);
 
     float sss = pow(max(dot(viewDir, -n), 0.0), 2.0) * 0.35;
-    color += deepBlue * sss;
+    color += purple * sss;
 
     vec3 lightDir = normalize(vec3(2.0, 3.0, 4.0));
     vec3 halfDir = normalize(lightDir + viewDir);
     float spec = pow(max(dot(n, halfDir), 0.0), 80.0);
-    color += ice * spec * 0.75;
+    color += pearl * spec * 0.75;
 
     vec3 lightDir2 = normalize(vec3(-3.0, -1.0, 2.0));
     vec3 halfDir2 = normalize(lightDir2 + viewDir);
     float spec2 = pow(max(dot(n, halfDir2), 0.0), 40.0);
-    color += cyan * spec2 * 0.35;
+    color += violet * spec2 * 0.35;
 
     vec3 lightDir3 = normalize(vec3(0.0, 4.0, -1.0));
     vec3 halfDir3 = normalize(lightDir3 + viewDir);
     float spec3 = pow(max(dot(n, halfDir3), 0.0), 60.0);
-    color += electric * spec3 * 0.25;
+    color += cyan * spec3 * 0.25;
 
-    color += cyan * fresnel * 0.12;
+    color += violet * fresnel * 0.10;
+    color += cyan * fresnel * 0.08;
 
     gl_FragColor = vec4(color, 1.0);
   }
@@ -205,9 +206,11 @@ const LiquidSphere = () => {
         style={{ background: "transparent" }}
         dpr={[1, 2]}
       >
-        <ambientLight intensity={0.25} />
-        <directionalLight position={[5, 5, 5]} intensity={0.6} />
-        <directionalLight position={[-3, -1, 2]} intensity={0.2} />
+        <ambientLight intensity={0.4} />
+        <hemisphereLight args={["#b794f4", "#1b1233", 0.35]} />
+        <directionalLight position={[5, 5, 5]} intensity={0.7} color="#f0abfc" />
+        <directionalLight position={[-3, -1, 2]} intensity={0.25} color="#67e8f9" />
+        <pointLight position={[2.5, 1.5, 2.5]} intensity={0.25} color="#a855f7" />
         <Sphere dragRot={dragRot} />
       </Canvas>
     </div>

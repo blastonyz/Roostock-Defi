@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Defiar - Rootstock Swap",
+  title: "Vify - Rootstock Swap",
   description: "Sovryn AMM Swap on Rootstock Testnet",
 };
 

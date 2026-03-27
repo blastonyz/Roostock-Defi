@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Menu, X } from "lucide-react";
+import Image from "next/image";
+import { XoConnectButton } from "@/components/landing/xo-connect-button";
 
 const navLinks = [
   { label: "Home", href: "#" },
@@ -17,8 +19,9 @@ export function Navbar() {
   return (
     <header className="fixed left-0 right-0 top-0 z-50 border-b border-cyan-400/20 bg-slate-950/80 backdrop-blur-xl">
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-        <a href="#" className="text-lg font-bold tracking-wide text-cyan-300" aria-label="Defiar home">
-          DEFIAR
+        <a href="#" className="flex items-center gap-2" aria-label="Vify home">
+          <Image src="/logo.png" alt="Vify logo" width={100} height={34} className="w-full h-full" priority />
+         
         </a>
 
         <div className="hidden items-center gap-1 md:flex">
@@ -33,7 +36,8 @@ export function Navbar() {
           ))}
         </div>
 
-        <div className="hidden md:block">
+        <div className="hidden items-center gap-3 md:flex">
+          <XoConnectButton />
           <ConnectButton />
         </div>
 
@@ -60,6 +64,9 @@ export function Navbar() {
               </a>
             ))}
             <div className="mt-3">
+              <div className="mb-3">
+                <XoConnectButton />
+              </div>
               <ConnectButton />
             </div>
           </div>

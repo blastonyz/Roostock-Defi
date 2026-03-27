@@ -44,8 +44,17 @@ body {
 }
 
 .text-gradient-cyan {
-  background: linear-gradient(90deg, #67e8f9 0%, #22d3ee 45%, #3b82f6 100%);
+  background: linear-gradient(90deg, #67e8f9 0%, #22d3ee 45%, #a855f7 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+
+.btn-gradient-cyan {
+  background: linear-gradient(90deg, #67e8f9 0%, #22d3ee 45%, #a855f7 100%);
+  box-shadow: 0 0 0 rgba(168, 85, 247, 0);
+}
+
+.btn-gradient-cyan:hover {
+  box-shadow: 0 0 28px rgba(168, 85, 247, 0.28);
 }

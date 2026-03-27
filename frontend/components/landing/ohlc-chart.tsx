@@ -26,12 +26,12 @@ type OhlcResponse = {
 };
 
 const PAIRS = [
-  { id: "bitcoin", label: "wrBTC / BTC" },
+  { id: "bitcoin", label: "BTC / USD" },
   { id: "ethereum", label: "ETH" },
-  { id: "avalanche-2", label: "AVAX" },
 ] as const;
 
 export function OhlcChart() {
+  const [mounted, setMounted] = useState(false);
   const [asset, setAsset] = useState<(typeof PAIRS)[number]["id"]>("bitcoin");
   const [days, setDays] = useState("30");
   const [isLoading, setIsLoading] = useState(false);
@@ -44,6 +44,14 @@ export function OhlcChart() {
   const selectedAsset = useMemo(() => PAIRS.find((pair) => pair.id === asset), [asset]);
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) {
+      return;
+    }
+
     let isCancelled = false;
 
     const loadOhlc = async () => {
@@ -92,9 +100,13 @@ export function OhlcChart() {
     return () => {
       isCancelled = true;
     };
-  }, [asset, days]);
+  }, [asset, days, mounted]);
 
   useEffect(() => {
+    if (!mounted) {
+      return;
+    }
+
     const container = containerRef.current;
     if (!container) {
       return;
@@ -143,7 +155,16 @@ export function OhlcChart() {
       chart.remove();
       chartRef.current = null;
     };
-  }, [points]);
+  }, [points, mounted]);
+
+  if (!mounted) {
+    return (
+      <div className="mt-6 rounded-2xl border border-cyan-400/20 bg-slate-950/70 p-4 backdrop-blur-sm">
+        <div className="h-5 w-32 rounded bg-cyan-400/10" />
+        <div className="mt-4 h-[360px] rounded-md border border-cyan-400/20 bg-slate-900/50" />
+      </div>
+    );
+  }
 
   return (
     <div className="mt-6 rounded-2xl border border-cyan-400/20 bg-slate-950/70 p-4 backdrop-blur-sm">
