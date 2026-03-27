@@ -1,5 +1,7 @@
 # Rootstock DeFi Project
 
+Documento rapido para demo/jueces: `DOCUMENTACION-COMUN.md`
+
 ## One-liner
 Bitcoin-secured DeFi on Rootstock: a simple product flow that lets users move from RBTC liquidity into useful on-chain actions like swapping into DoC and interacting with Sovryn primitives through a clean, accessible interface.
 
