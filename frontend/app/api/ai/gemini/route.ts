@@ -169,7 +169,7 @@ export async function POST(request: NextRequest) {
     ].join("\n");
 
     const geminiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -177,7 +177,6 @@ export async function POST(request: NextRequest) {
           contents: [{ role: "user", parts: [{ text: prompt }] }],
           generationConfig: {
             temperature: 0.2,
-            responseMimeType: "application/json",
           },
         }),
       }
